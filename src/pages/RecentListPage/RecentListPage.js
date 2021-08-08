@@ -19,11 +19,24 @@ export default class RecentListPage extends Component {
     onlyInterestingProduct: false,
     filteredDatas: [],
     priceChecked: false,
+    date: new Date(),
+  };
+
+  update = () => {
+    this.setState({
+      date: new Date(),
+    });
   };
 
   getRecentList = () => {
     this.setState({
       datas: LOCAL_STORAGE.get("recentList"),
+    });
+  };
+
+  clearRecentList = () => {
+    this.setState({
+      datas: LOCAL_STORAGE.clear("recentList"),
     });
   };
 
@@ -51,16 +64,35 @@ export default class RecentListPage extends Component {
     });
   };
 
-  goProductListPage = () => {
-    this.props.history.push("/product");
-  };
+  // goProductListPage = () => {
+  //   this.props.history.push("/product");
+  // };
 
   componentDidMount() {
     this.getRecentList();
+
+    setInterval(this.update, 1000);
+  }
+
+  componentDidUpdate() {
+    const hour = this.state.date.getHours();
+    const minute = this.state.date.getMinutes();
+    const second = this.state.date.getSeconds();
+
+    console.log(hour, minute, second, hour + minute + second === 0);
+
+    if (hour + minute + second === 0) {
+      this.setState({
+        datas: LOCAL_STORAGE.get("recentList"),
+      });
+
+      // break;
+    }
   }
 
   render() {
     const { datas, checked, onlyInterestingProduct, priceChecked } = this.state;
+
     let products = datas;
     let filteredList;
 
@@ -123,42 +155,43 @@ export default class RecentListPage extends Component {
           </Row>
 
           <Row gutter={[16, 16]}>
-            {filteredList.map((data) => {
-              const originalData = getOriginalInfo(data.id);
+            {filteredList &&
+              filteredList.map((data) => {
+                const originalData = getOriginalInfo(data.id);
 
-              return (
-                <Col lg={6} md={8} xs={24} key={data.id}>
-                  <Link
-                    to={(location) => {
-                      if (data.dislike) {
-                        return { ...location };
-                      }
-                      return {
-                        ...location,
-                        pathname: `/product/${data.id}`,
-                      };
-                    }}
-                    onClick={() => this.handleAccessPopup(data.dislike)}
-                  >
-                    <Card
-                      hoverable={true}
-                      cover={
-                        <img
-                          alt="example"
-                          style={cardImageStyle}
-                          src={originalData.imgUrl}
-                        />
-                      }
+                return (
+                  <Col lg={6} md={8} xs={24} key={data.id}>
+                    <Link
+                      to={(location) => {
+                        if (data.dislike) {
+                          return { ...location };
+                        }
+                        return {
+                          ...location,
+                          pathname: `/product/${data.id}`,
+                        };
+                      }}
+                      onClick={() => this.handleAccessPopup(data.dislike)}
                     >
-                      <Meta
-                        title={originalData.title}
-                        description={originalData.brand}
-                      />
-                    </Card>
-                  </Link>
-                </Col>
-              );
-            })}
+                      <Card
+                        hoverable={true}
+                        cover={
+                          <img
+                            alt="example"
+                            style={cardImageStyle}
+                            src={originalData.imgUrl}
+                          />
+                        }
+                      >
+                        <Meta
+                          title={originalData.title}
+                          description={originalData.brand}
+                        />
+                      </Card>
+                    </Link>
+                  </Col>
+                );
+              })}
           </Row>
         </RecentListContainer>
       </div>
