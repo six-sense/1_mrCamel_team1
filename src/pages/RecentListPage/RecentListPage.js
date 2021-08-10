@@ -1,3 +1,5 @@
+/* eslint-disable react/prop-types */
+
 import React, { Component } from "react";
 import PropTypes from "prop-types";
 import BrandFilterMenu from "../../components/BrandFilterMenu";
@@ -74,19 +76,15 @@ export default class RecentListPage extends Component {
     setInterval(this.update, 1000);
   }
 
-  componentDidUpdate() {
+  componentDidUpdate(prevProps, prevState) {
     const hour = this.state.date.getHours();
     const minute = this.state.date.getMinutes();
     const second = this.state.date.getSeconds();
 
-    console.log(hour, minute, second, hour + minute + second === 0);
-
     if (hour + minute + second === 0) {
-      this.setState({
-        datas: LOCAL_STORAGE.get("recentList"),
-      });
-
-      // break;
+      if (prevState.date !== this.state.date) {
+        this.clearRecentList();
+      }
     }
   }
 
@@ -158,7 +156,6 @@ export default class RecentListPage extends Component {
             {filteredList &&
               filteredList.map((data) => {
                 const originalData = getOriginalInfo(data.id);
-
                 return (
                   <Col lg={6} md={8} xs={24} key={data.id}>
                     <Link
@@ -178,7 +175,7 @@ export default class RecentListPage extends Component {
                         cover={
                           <img
                             alt="example"
-                            style={cardImageStyle}
+                            // style={cardImageStyle}
                             src={originalData.imgUrl}
                           />
                         }
@@ -198,10 +195,6 @@ export default class RecentListPage extends Component {
     );
   }
 }
-
-const cardImageStyle = {
-  height: "150px",
-};
 
 const buttonPositionStyle = {
   textAlign: "right",

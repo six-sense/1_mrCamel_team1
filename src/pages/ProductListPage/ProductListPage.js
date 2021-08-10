@@ -76,13 +76,7 @@ export default class ProductListPage extends Component {
                   >
                     <Card
                       hoverable={true}
-                      cover={
-                        <img
-                          alt="example"
-                          style={cardImageStyle}
-                          src={product.imgUrl}
-                        />
-                      }
+                      cover={<img alt="example" src={product.imgUrl} />}
                     >
                       <Meta
                         title={product.title}
@@ -99,10 +93,6 @@ export default class ProductListPage extends Component {
     );
   }
 }
-
-const cardImageStyle = {
-  height: "150px",
-};
 
 const removeDuplicatedItemById = (arr, id) => {
   return arr.filter((item) => item.id !== id);
