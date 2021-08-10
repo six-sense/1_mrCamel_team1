@@ -92,6 +92,11 @@ export default class RecentListPage extends Component {
     const { datas, checked, onlyInterestingProduct, priceChecked } = this.state;
 
     let products = datas;
+    products = products.map((data) => {
+      const originalData = getOriginalInfo(data.id);
+      return { ...data, price: originalData.price };
+    });
+    console.log(products);
     let filteredList;
 
     const compareFunction = (a, b) => {
@@ -105,6 +110,11 @@ export default class RecentListPage extends Component {
     if (checked.length === 0) {
       filteredList = products;
       if (priceChecked) {
+        products = products.map((data) => {
+          const originalData = getOriginalInfo(data.id);
+          return { ...data, price: originalData.price };
+        });
+
         filteredList = products.sort(compareFunction);
       }
     } else {
@@ -114,6 +124,11 @@ export default class RecentListPage extends Component {
       });
 
       if (priceChecked) {
+        products = products.map((data) => {
+          const originalData = getOriginalInfo(data.id);
+          return { ...data, price: originalData.price };
+        });
+
         filteredList = filteredList.sort(compareFunction);
       }
     }
@@ -172,13 +187,7 @@ export default class RecentListPage extends Component {
                     >
                       <Card
                         hoverable={true}
-                        cover={
-                          <img
-                            alt="example"
-                            // style={cardImageStyle}
-                            src={originalData.imgUrl}
-                          />
-                        }
+                        cover={<img alt="example" src={originalData.imgUrl} />}
                       >
                         <Meta
                           title={originalData.title}

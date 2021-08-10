@@ -1,4 +1,4 @@
-import storage from "./storage";
+import storage from "./storage/storage";
 import { getOriginalData } from "./getOriginalData";
 import { getInterestList } from "./getInterestList";
 

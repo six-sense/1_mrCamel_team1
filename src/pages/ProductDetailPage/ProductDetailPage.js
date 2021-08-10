@@ -4,9 +4,14 @@ import {
   MIN_PRODUCT_ID,
   MAX_PRODUCT_ID,
   LOCAL_STORAGE,
-  INTEREST_LIST,
 } from "../../utils/constants";
 import propTypes from "prop-types";
+import { Col, Row, Typography, Button } from "antd";
+import { DetailPageContainer } from "./ProductDetailPageStyle";
+import { UserOutlined } from "@ant-design/icons";
+
+const { Title } = Typography;
+import recentListStorage from "../../utils/storage/recentList";
 
 class ProductDetailPage extends Component {
   constructor(props) {
@@ -19,6 +24,7 @@ class ProductDetailPage extends Component {
 
   static getDerivedStateFromProps(nextProps, prevState) {
     const productId = nextProps.match.params.productId;
+
     if (prevState.productId !== "-1") {
       return { productId: parseInt(productId) };
     } else if (
@@ -31,8 +37,20 @@ class ProductDetailPage extends Component {
     return null;
   }
 
-  render() {
-    const { productId, original_data } = this.state;
+  async componentDidUpdate() {
+    const {
+      match: {
+        params: { productId },
+      },
+    } = this.props;
+
+    const goRecentListPage = () => {
+      this.props.history.push("/recent-list");
+    };
+
+    const goProductListPage = () => {
+      this.props.history.push("/product");
+    };
 
     const randomProduct = (interestList) => {
       let temp = productId;
@@ -41,56 +59,99 @@ class ProductDetailPage extends Component {
       }
       return interestList[temp] === undefined ? productId : interestList[temp];
     };
+    await recentListStorage.update(productId);
+  }
 
-    const handleRandom = async () => {
-      let interestList = await LOCAL_STORAGE.get("interestList");
-      if (interestList === null) {
-        await LOCAL_STORAGE.set("interestList", INTEREST_LIST);
-      }
-      interestList = await LOCAL_STORAGE.get("interestList");
-      if (interestList.length <= 0) {
-        return;
-      }
-      const nextProductId = randomProduct(interestList);
-      this.props.history.push(`/product/${nextProductId}`);
-    };
+  async componentDidMount() {
+    const {
+      match: {
+        params: { productId },
+      },
+    } = this.props;
 
-    const handleDislike = async () => {
-      let interestList = await LOCAL_STORAGE.get("interestList");
-      if (interestList === null) {
-        await LOCAL_STORAGE.set("interestList", INTEREST_LIST);
+    await recentListStorage.update(productId);
+  }
+
+  randomProduct(interestList, productId) {
+    let temp = productId;
+    while (temp === productId) {
+      temp = Math.floor(Math.random() * interestList.length);
+    }
+    return interestList[temp] === undefined ? productId : interestList[temp];
+  }
+
+  async handleRandom(productId) {
+    const interestList = await LOCAL_STORAGE.get("interestList");
+
+    if (interestList.length <= 0) {
+      return;
+    }
+    const nextProductId = this.randomProduct(interestList, productId);
+    this.props.history.push(`/product/${nextProductId}`);
+    this.setState({ productId: nextProductId });
+  }
+
+  async handleDislike(productId) {
+    await recentListStorage.dislike(productId);
+
+    const interestList = await LOCAL_STORAGE.get("interestList");
+    if (interestList.length <= 0) {
+      return;
+    }
+    let tempArray = [];
+    for (let i = 0; i < interestList.length; i++) {
+      if (interestList[i] === productId) {
+        tempArray = interestList.slice(0, i).concat(interestList.slice(i + 1));
+        break;
       }
-      interestList = await LOCAL_STORAGE.get("interestList");
-      if (interestList.length <= 0) {
-        return;
-      }
-      let tempArray = [];
-      for (let i = 0; i < interestList.length; i++) {
-        if (interestList[i] === productId) {
-          tempArray = interestList
-            .slice(0, i)
-            .concat(interestList.slice(i + 1));
-          break;
-        }
-      }
-      await LOCAL_STORAGE.set("interestList", tempArray);
-      const nextProductId = randomProduct(tempArray);
-      this.props.history.push(`/product/${nextProductId}`);
-    };
+    }
+    await LOCAL_STORAGE.set("interestList", tempArray);
+    const nextProductId = this.randomProduct(tempArray, productId);
+    this.props.history.push(`/product/${nextProductId}`);
+  }
+
+  render() {
+    const { productId, original_data } = this.state;
 
     return (
       <div>
         {productId !== -1 &&
         productId < MAX_PRODUCT_ID &&
         productId >= MIN_PRODUCT_ID ? (
-          <div>
+          <DetailPageContainer>
+            <Row gutter={[16, 16]} type="flex">
+              <Col span={16}>
+                <Title>상품 상세 페이지</Title>
+              </Col>
+
+              <Col span={8} style={{ textAlign: "right" }}>
+                <Button
+                  type="primary"
+                  onClick={goProductListPage}
+                  style={{ right: "10px" }}
+                >
+                  {" "}
+                  상품 목록
+                </Button>
+                <Button
+                  type="primary"
+                  icon={<UserOutlined />}
+                  onClick={goRecentListPage}
+                >
+                  {" "}
+                  최근 본 상품 목록
+                </Button>
+              </Col>
+            </Row>
             <img src={original_data[productId].imgUrl} alt="productImage" />
             <div>{original_data[productId].title}</div>
             <div>{original_data[productId].brand}</div>
             <div>{original_data[productId].price}</div>
-            <button onClick={handleRandom}>Random</button>
-            <button onClick={handleDislike}>Dislike</button>
-          </div>
+            <Button onClick={() => this.handleRandom(productId)}>Random</Button>
+            <Button onClick={() => this.handleDislike(productId)}>
+              Dislike
+            </Button>
+          </DetailPageContainer>
         ) : (
           <div>잘못된 페이지입니다</div>
         )}
